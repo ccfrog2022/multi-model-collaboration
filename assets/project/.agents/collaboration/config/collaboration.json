@@ -1,0 +1,52 @@
+{
+  "schemaVersion": 1,
+  "paths": {
+    "dataRoot": ".collaboration",
+    "workerInbox": "collaboration-artifacts"
+  },
+  "protocol": {
+    "serial": true,
+    "inventory": {
+      "maxFiles": 50000,
+      "maxHashBytes": 1073741824,
+      "exclude": []
+    }
+  },
+  "protected": {
+    "workerDenyPaths": [
+      "AGENTS.md",
+      "COLLABORATION.md",
+      "COLLABORATION-SETUP.md",
+      ".agents",
+      ".agents/**",
+      "scripts/collaboration",
+      "scripts/collaboration/**",
+      ".collaboration",
+      ".collaboration/**",
+      ".git",
+      ".git/**"
+    ],
+    "immutablePaths": [
+      "COLLABORATION-SETUP.md",
+      ".git",
+      ".git/**"
+    ],
+    "maintenancePaths": [
+      "AGENTS.md",
+      "COLLABORATION.md",
+      ".agents",
+      ".agents/**",
+      "scripts/collaboration",
+      "scripts/collaboration/**"
+    ],
+    "neverAllowWithinMaintenance": [
+      ".collaboration",
+      ".collaboration/**",
+      ".git",
+      ".git/**",
+      "scripts/collaboration/tests",
+      "scripts/collaboration/tests/**",
+      "COLLABORATION-SETUP.md"
+    ]
+  }
+}
