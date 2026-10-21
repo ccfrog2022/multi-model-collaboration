@@ -1,0 +1,26 @@
+{
+  "schemaVersion": 1,
+  "preferenceOrder": [],
+  "tools": [
+    {
+      "id": "my-worker",
+      "label": "Project model adapter",
+      "kind": "json",
+      "enabled": false,
+      "readiness": "unverified",
+      "executable": "",
+      "requestedModel": "",
+      "observedModel": "unknown",
+      "reasoningEffort": "",
+      "allowedRoles": ["executor", "tester", "reviewer", "probe"],
+      "commonArgs": ["--prompt-file", "{promptFile}", "--role", "{role}", "--model", "{model}", "--cwd", "{cwd}"],
+      "nonGitArgs": [],
+      "roleArgs": {"executor": [], "tester": [], "reviewer": [], "probe": []},
+      "resolve": {"mode": "fixed"},
+      "env": {},
+      "notes": [],
+      "probeArgs": ["--version"],
+      "probeContains": []
+    }
+  ]
+}

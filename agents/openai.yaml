@@ -1,0 +1,6 @@
+interface:
+  display_name: "多模型协作"
+  short_description: "以项目本地规则、角色分工、独立审查和证据门禁组织多模型开发协作"
+  default_prompt: "使用 $multi-model-collaboration 检查本项目协作入口并按授权阶段推进任务。"
+policy:
+  allow_implicit_invocation: true
