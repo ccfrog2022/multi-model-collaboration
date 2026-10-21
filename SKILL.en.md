@@ -7,30 +7,29 @@ description: A multi-model collaboration skill for software development, organiz
 
 [简体中文](SKILL.md) | **English**
 
-Multi-Model Collaboration is a skill for software development. The main conversation organizes requirements and tasks, independent worker sessions handle implementation, testing and review, and delivery follows inspection of the actual artifacts and verification results.
+Use these instructions to coordinate quality-first software development: the coordinator establishes goals and acceptance criteria, the executor implements, an independent tester verifies, and a reviewer examines plans and results according to task risk. See [README](README.en.md) for the project introduction, installation and usage examples.
 
 ![Multi-Model Collaboration roles, architecture, workflow, recovery and stopping conditions](assets/diagrams/architecture-workflow.en.png)
 
 [View full-size diagram](assets/diagrams/architecture-workflow.en.png)
 
-Its core principle is to **improve development quality through clear responsibilities, independent verification and traceable handoffs**. Planning, implementation, testing and acceptance share the same objective, file versions and acceptance criteria.
+## Entry and preparation
 
-This document explains the skill, its workflow and its entry points. It also guides agents using the skill. Detailed command parameters and setup procedures are provided in the supporting references.
+Use this skill for feature development, bug fixes, refactoring and delivery verification. The main conversation acts as coordinator. Establish the target project, the phase requested by the user, change scope and verifiable acceptance criteria. If the user requests analysis or a proposal first, complete that phase.
 
-## What it helps with
+- **Project not yet configured:** read [Project onboarding](references/onboarding.md). Use `Plan` in `scripts/Initialize-Project.ps1` to generate a file-level proposal with expected effects, validation and rollback arrangements. After approval, run `Apply` and check original backups, setup records and tool readiness.
+- **Configured project:** read the rules referenced by the project's `AGENTS.md`, its `.agents/collaboration/README.md` and relevant command templates in full. Run the following commands to inspect task and tool state, then follow the [project workflow](references/workflow.md).
 
-Ongoing development requires understanding requirements, changing code, checking results and handling rework. Assigning clear responsibilities lets separate sessions examine the implementation, its behavior and whether the delivery meets the requirements.
+```powershell
+pwsh -NoProfile -File scripts/collaboration/Collab.ps1 Status
+pwsh -NoProfile -File scripts/collaboration/Collab.ps1 Doctor
+```
 
-The skill organizes collaboration around four practices:
+Run project commands from the project root and obtain exact arguments from the project command README and templates. Subsequent status queries should resolve a specific uncertainty about phase, version, locks or tool state.
 
-- **Clear ownership:** each session knows its responsibility, writable files and expected deliverables.
-- **Independent checks:** testing uses a session independent of the implementer; important tasks also receive plan and result reviews.
-- **Continuity:** successors receive the current version, existing results and unresolved issues.
-- **Evidence-based delivery:** the coordinator inspects source, actual changes, test output and acceptance records before reaching a conclusion.
+Public commands require PowerShell 7.4+. Windows project and backup directories use local NTFS; macOS also requires Python 3.11+. Both platforms follow the same workflow, with scripts selecting the platform implementation. Windows has undergone isolated regression testing. macOS real-machine validation and cleanup acceptance for multi-process CLIs remain pending; use [Validation](references/validation.md) when assessing the environment.
 
-Typical uses include feature development, defect repair, cross-file refactoring and deliveries that benefit from independent checks.
-
-## How the four roles work together
+## Assign roles and file ownership
 
 An instance is a model work session with an explicit task, role and identity. Independent instances can use the same model or different models selected through project configuration.
 
@@ -45,9 +44,9 @@ The executor owns implementation code, the tester owns test code, and the coordi
 
 For tool setup, `ProbeTool` performs local version or capability checks. When model-assisted analysis of compatibility is useful, a task can invoke the read-only `probe` role using a ready tool and an independent instance.
 
-File ownership is checked by file identity. On macOS, checks account for existing file identity and the filesystem's case rules for targets that do not yet exist. Windows scope checks use case-insensitive paths.
+Use explicit file paths with consistent casing and check role boundaries by file identity. See [Role boundaries](references/recovery.md) for platform rules.
 
-## How a task reaches completion
+## Execute the unified workflow
 
 ### 1. Understand the request and project
 
@@ -57,13 +56,13 @@ When the user requests analysis or a proposal first, deliver that phase. Once im
 
 ### 2. Plan the work and reviews
 
-The coordinator chooses a task grade under project rules and records the reason. An ordinary task goes through implementation, independent testing and coordinator acceptance. An important task adds independent plan review before implementation and result review after testing.
+The coordinator chooses a task grade under project rules and records the reason. Follow the [project workflow](references/workflow.md) and use `NewTask` to record the objective, authorization, acceptance criteria, named file scope and grade. An ordinary task goes through implementation, independent testing and coordinator acceptance. An important task adds independent plan review before implementation and result review after testing.
 
 A localized fix with clear impact may be ordinary. Changes to critical behavior, data structures or substantial architecture should be assessed as important under project rules. Review depth follows risk; responsibilities and acceptance principles apply throughout.
 
 ### 3. Dispatch and implement
 
-The coordinator creates the task record, prepares backups of originals, and supplies exact file scope, current versions, necessary context and acceptance criteria. The executor completes the assignment and returns actual changes and verification results.
+The coordinator preserves originals through `Backup`, uses `Advance` as required by the current phase, and dispatches the executor through `Invoke`. Follow the project workflow for the precise order and gates. Supply exact file scope, current versions, necessary context and acceptance criteria, then collect actual changes and verification results.
 
 Every managed invocation uses a fresh `InstanceId`. Managed calls within a project run serially, with task records linking each invocation to its artifacts.
 
@@ -81,54 +80,7 @@ The coordinator reads the actual source, changes and original output, and checks
 
 Completion refers to the current artifact version. The delivery explains what changed, what was verified, where the evidence is and what still needs follow-up. Clean up task-owned processes and browsers as part of delivery.
 
-## Getting started
-
-### Runtime requirements and package contents
-
-The skill targets Windows and macOS. Prepare dependencies for the current operating system; both use the same roles, project commands and collaboration workflow. Public commands require **PowerShell 7.4+**. Windows projects use NTFS; macOS also requires **Python 3.11+**. Project setup adds collaboration rules, command scripts, tool configuration, task templates and runtime records.
-
-Scripts select the process-management and backup implementation for the current operating system. Roles and workflow remain the same. Platform details and verification progress are recorded in [Validation](references/validation.md).
-
-The current version has undergone isolated Windows regression testing. macOS has a platform implementation awaiting real-machine validation; automatic cleanup acceptance for multi-process CLIs still needs further work.
-
-Models and execution tools are configured per project. The coordinator selects ready tools based on capability, quality requirements, cost, availability and user preferences. Start with the [tool configuration example](examples/tools.json) and use the [tool integration contract](references/tools.md) to define entry points and role capabilities.
-
-| File or directory | Purpose |
-|---|---|
-| `SKILL.md` | Skill instructions and execution entry point |
-| `SKILL.en.md` / `README.en.md` | English skill instructions and project introduction |
-| `assets/diagrams/` | Chinese and English architecture and workflow diagrams |
-| `references/` | Detailed setup, development and handoff guidance |
-| `scripts/Initialize-Project.ps1` | Plan and apply project setup, or roll back from backups |
-| `assets/project/` | Rules, commands and templates installed into a project |
-| `agents/openai.yaml` | Client display metadata |
-| `examples/tools.json` | Example tool and model configuration |
-| `tests/` | Local verification scripts and deterministic test workers |
-
-### Set up collaboration in a new project
-
-In the target project's conversation, ask:
-
-> Use $multi-model-collaboration to prepare a multi-model collaboration setup plan for this project.
-
-The coordinator reads [Project onboarding](references/onboarding.md), identifies the root, runs the initializer's `Plan`, and presents the file list, expected effect, validation and rollback arrangements. After approval, run `Apply`, preserve originals and setup records, inspect project status and verify tools through the onboarding procedure.
-
-### Develop in a configured project
-
-Describe the development goal directly:
-
-> Use $multi-model-collaboration to implement order filtering in this project. Establish acceptance criteria first, then organize implementation and independent testing.
-
-The coordinator reads the rules and command README referenced by the project's `AGENTS.md` in full, then runs from the project root:
-
-```powershell
-pwsh -NoProfile -File scripts/collaboration/Collab.ps1 Status
-pwsh -NoProfile -File scripts/collaboration/Collab.ps1 Doctor
-```
-
-`Status` reports task and runtime state; `Doctor` checks configuration and tool entry points. Follow the [project workflow](references/workflow.md) to create tasks, dispatch work, test and accept results. Read the project's `.agents/collaboration/README.md` and relevant templates for exact invocation parameters.
-
-## Handoffs and efficient context
+## Prepare dispatch and collect results
 
 Prepare material for the assigned role: requirements, relevant source and write scope for executors; acceptance criteria, implementation and boundary cases for testers; the plan or changes and supporting evidence for reviewers.
 
@@ -146,6 +98,8 @@ Dispatch a complete intended outcome, including acceptance criteria, role scope 
 Reference accessible authoritative files for stable context. Rework adds the delta and material needed for the current round. Extract decisive command results first and open original records when needed for a decision. This reduces tokens spent copying, translating and summarizing the same information.
 
 Dispatch briefs and worker responses use English; user-facing delivery uses Chinese. Keep code identifiers unchanged. For dispatch and rework, read [Handoffs and context management](references/handoff.md) and check actual invocation identity, valid versions and operations allowed in the current state.
+
+Follow the return protocol in the project command README. Check invocation identity, actual version, changes, verification commands, exit codes, evidence locations and unresolved issues. Reviewers emit the required final `COLLAB_VERDICT` line; the coordinator reads original results before registering them through `RecordReview`, `RecordAcceptance` and `Complete`. Adjudicate findings in `PASS WITH NITS`; treat issues affecting acceptance as blockers.
 
 `PrepareContext` assembles the current brief, role focus, acceptance criteria, delta and evidence locations into a context package. Source and stable background remain path-and-digest references. `Invoke` uses `ContextId` to check role, revision and referenced files. Regenerate the relevant context package when its materials change.
 
@@ -175,15 +129,13 @@ When a call fails, the coordinator collects logs and changes, checks process cle
 
 Normal invocation failures with complete file and cleanup checks continue through `Handoff`. It captures the boundary of existing invocations and evidence and resets acceptance and real-workflow verification. Fresh instances of the appropriate roles address unresolved failures. Consecutive handoffs verify and retain successful replacements whose files and originals remain valid. Each handoff requires independent testing of the current version, new acceptance and required result review. Deliver once completion conditions are met; concrete repair issues use `Rework` for a new round. Preserve original failure records.
 
-## File scanning and long-term use
+## Scanning and stale locks
 
-Register an invocation after its prelaunch scan completes. An interrupted postlaunch scan remains pending verification; recovery uses the saved prelaunch baseline to compare the complete scope again. `Handoff` and `Rework` use valid recovery records to assess historical cleanup. `RecoverLock` handles stale project locks. `Status` shows recovery-mutex ownership; the operating system releases the handle when its process exits.
+If a prelaunch scan fails, correct the specific configuration or file conditions before invoking again. If a postlaunch scan is interrupted, follow [Recovery](references/recovery.md) to verify the complete changes against the bound prelaunch baseline, then handle recovery and rework.
 
-Each invocation checks project files and collaboration control records separately. The project inventory skips `.collaboration/`; a separate control snapshot checks historical calls, backups, evidence and inventories. New inventories describe current project files, with historical snapshots stored separately.
+To reduce scans of dependencies and generated output, configure derived directories in `protocol.inventory.exclude`. Named task files, frozen tests and protected collaboration files remain checked. Project inventories and collaboration control snapshots verify project files and historical records separately.
 
-Projects can list derived directories in `protocol.inventory.exclude`, such as `node_modules/**` and `coverage/**`. Named task files, frozen tests and protected collaboration files remain checked. See [Recovery, scanning and role boundaries](references/recovery.md).
-
-Control snapshots retain separate digests for filenames differing by case and use project-relative paths. Every invocation saves a digest-bound `baseline.json` for incident recovery.
+Use `RecoverLock` for stale project locks after verifying process exit. Inspect `Status` to distinguish project-lock ownership from recovery-mutex ownership. See [Recovery, scanning and role boundaries](references/recovery.md) for evidence and operational requirements.
 
 ## References by task
 
