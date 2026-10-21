@@ -19,6 +19,43 @@ $script:JournalPath = $null
 $script:JournalTemp = $null
 $script:Begin = '<!-- MULTI-MODEL-COLLABORATION:BEGIN -->'
 $script:End = '<!-- MULTI-MODEL-COLLABORATION:END -->'
+# Check the shipped file set before loading any package dependency or touching the project.
+$requiredAssets = @(
+    '.agents/collaboration/README.md'
+    '.agents/collaboration/config/collaboration.json'
+    '.agents/collaboration/config/tools.json'
+    '.agents/collaboration/templates/acceptance.json'
+    '.agents/collaboration/templates/context.json'
+    '.agents/collaboration/templates/invoke.json'
+    '.agents/collaboration/templates/new-task.json'
+    '.agents/collaboration/templates/plan.md'
+    '.agents/collaboration/templates/recover-task.json'
+    '.agents/collaboration/templates/review.json'
+    '.agents/collaboration/templates/rework.json'
+    '.agents/collaboration/templates/worker.md'
+    'AGENTS.md'
+    'COLLABORATION-SETUP.md'
+    'COLLABORATION.md'
+    'scripts/collaboration/Collab.ps1'
+    'scripts/collaboration/Collab.psm1'
+    'scripts/collaboration/lib/Collab.Coordination.ps1'
+    'scripts/collaboration/lib/Collab.Core.ps1'
+    'scripts/collaboration/lib/Collab.Evidence.ps1'
+    'scripts/collaboration/lib/Collab.Lock.ps1'
+    'scripts/collaboration/lib/Collab.Parser.ps1'
+    'scripts/collaboration/lib/Collab.Platform.ps1'
+    'scripts/collaboration/lib/Collab.Process.ps1'
+    'scripts/collaboration/lib/Collab.Recovery.ps1'
+    'scripts/collaboration/lib/Collab.State.ps1'
+    'scripts/collaboration/lib/Collab.Tools.ps1'
+    'scripts/collaboration/native/Collab.Native.cs'
+    'scripts/collaboration/native/platform_macos.py'
+)
+$missingAssets = @($requiredAssets | Where-Object { -not (Test-Path -LiteralPath (Join-Path $script:AssetRoot $_) -PathType Leaf) })
+if ($missingAssets.Count) {
+    [ordered]@{ Ok=$false; Code='package_incomplete'; MissingPaths=$missingAssets; Reasons=@("Package assets missing under '$script:AssetRoot': " + ($missingAssets -join ', ') + '. Download the complete package including assets/project/.agents.'); Journal=$null } | ConvertTo-Json -Depth 8
+    exit 1
+}
 . (Join-Path $script:AssetRoot 'scripts/collaboration/lib/Collab.Platform.ps1')
 
 function Hash-Bytes([byte[]]$Bytes) {
@@ -282,6 +319,11 @@ function Decode-Agents([byte[]]$Bytes) {
 function Make-Plan([string]$OwnLock = '') {
     Assert-State $OwnLock
     $assets = Assets
+    $configPath = Join-Path $script:AssetRoot '.agents/collaboration/config/collaboration.json'
+    try { $sourceConfig = Read-Json $configPath }
+    catch { throw "Cannot read configuration '$configPath' as JSON: $($_.Exception.Message)" }
+    $configCheck = Test-CollabConfig -Config $sourceConfig -Path $configPath
+    if (-not $configCheck.Ok) { throw ($configCheck.Reasons -join '; ') }
     $input = [ordered]@{ path=''; sha256='' }
     $toolRel = '.agents/collaboration/config/tools.json'
     if ($ToolsFile) {
@@ -629,7 +671,7 @@ namespace CollabInitializer {
             // READ_DATA | READ_ATTRIBUTES | WRITE_ATTRIBUTES. The latter permits
             // per-handle suppression only; inability to obtain it fails closed.
             using (var handle = CreateFileW(path, 0x181, 7, IntPtr.Zero, 3, 0x08000000, IntPtr.Zero)) {
-                if (handle.IsInvalid) throw new Win32Exception(Marshal.GetLastWin32Error(), "Cannot open metadata-preserving read handle");
+                if (handle.IsInvalid) { int error = Marshal.GetLastWin32Error(); throw new Win32Exception(error, "Cannot read file '" + path + "' (Win32 " + error + "): " + new Win32Exception(error).Message); }
                 var noUpdate = new Time { Low=0xffffffff, High=0xffffffff };
                 if (!SetFileTime(handle, IntPtr.Zero, ref noUpdate, IntPtr.Zero))
                     throw new Win32Exception(Marshal.GetLastWin32Error(), "Cannot suppress read access-time bookkeeping");

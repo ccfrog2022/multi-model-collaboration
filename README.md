@@ -85,6 +85,8 @@ Multi-Model Collaboration 让编程助手的主会话担任协调者，将实现
 
 ## 安装与开始使用
 
+通过 GitHub 的 **Code → Download ZIP** 或 `git clone` 获取仓库全部文件，解压后保留目录结构。项目配置和命令模板位于 `assets/project/.agents/`，该目录包含 12 个文件。初始化器会先检查全部 29 个项目资产文件，再生成接入方案。
+
 将本目录复制到编程助手的技能目录，文件夹命名为 `multi-model-collaboration`。例如 Codex 的默认技能目录是 `~/.codex/skills/`。保持目录内部结构完整。
 
 在目标项目会话中输入：
@@ -142,6 +144,14 @@ Multi-Model Collaboration 让编程助手的主会话担任协调者，将实现
 
 ## 本地验证
 
+运行发布检查：
+
+```powershell
+pwsh -NoProfile -File tests/Test-Distribution.ps1
+```
+
+检查覆盖完整包接入与回滚，以及缺文件、缺字段和字段类型错误的诊断。`package_incomplete` 会列出缺失资产；配置错误会指出配置文件与字段。处理方法见 [接入诊断](references/onboarding.md#接入诊断)。接入后按 [工具接入约定](references/tools.md) 配置项目使用的模型 CLI。
+
 在 skill 根目录运行：
 
 ```powershell
@@ -160,3 +170,7 @@ pwsh -NoProfile -File tests/Test-Package.ps1 -Python /absolute/path/to/python
 - [工具接入约定](references/tools.md)
 - [异常恢复、扫描与角色边界](references/recovery.md)
 - [验证记录](references/validation.md)
+
+## 许可证
+
+本项目采用 [MIT License](LICENSE)。

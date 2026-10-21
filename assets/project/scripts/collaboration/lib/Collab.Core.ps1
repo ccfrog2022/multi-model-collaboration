@@ -4,8 +4,7 @@
 # All functions are exported by the Collab module so that tests can call them
 # directly. Nothing here launches processes or mutates project state.
 
-# StrictMode 2.0: catches uninitialised variables and typos while still
-# allowing missing JSON fields to read as $null (Latest throws instead).
+# Validate configuration fields explicitly before accessing them under StrictMode.
 Set-StrictMode -Version 2.0
 
 # Set by Collab.psm1 before this file is dot-sourced; the fallback keeps the
@@ -109,6 +108,57 @@ function Resolve-CollabRoot {
     return @{ Ok = $true; Code = 'ok'; Root = $candidate }
 }
 
+function Test-CollabConfig {
+    [CmdletBinding()]
+    param([AllowNull()]$Config, [string]$Path = 'collaboration.json')
+    $reasons = [Collections.Generic.List[string]]::new()
+    # Validate parent objects first so a missing parent produces one actionable error.
+    $fields = [ordered]@{
+        '$'='object'; 'schemaVersion'='version'; 'paths'='object'
+        'paths.dataRoot'='string'; 'paths.workerInbox'='string'
+        'protocol'='object'; 'protocol.serial'='bool'; 'protocol.inventory'='object'
+        'protocol.inventory.maxFiles'='int32'; 'protocol.inventory.maxHashBytes'='int64'
+        'protocol.inventory.exclude'='strings'; 'protected'='object'
+        'protected.workerDenyPaths'='strings'; 'protected.immutablePaths'='strings'
+        'protected.maintenancePaths'='strings'; 'protected.neverAllowWithinMaintenance'='strings'
+    }
+    $invalid = [Collections.Generic.List[string]]::new()
+    foreach ($key in $fields.Keys) {
+        if (@($invalid | Where-Object { $_ -eq '$' -or $key.StartsWith($_ + '.') }).Count) { continue }
+        $value = $Config; $exists = $true
+        if ($key -ne '$') {
+            foreach ($part in $key.Split('.')) {
+                if ($value -is [Collections.IDictionary]) {
+                    if (-not $value.Contains($part)) { $exists=$false; break }
+                    $value=$value[$part]
+                } else {
+                    $property=$value.PSObject.Properties[$part]
+                    if ($null -eq $property) { $exists=$false; break }
+                    $value=$property.Value
+                }
+            }
+        }
+        $kind=$fields[$key]
+        $integer=($value -is [int] -or $value -is [long] -or $value -is [System.Numerics.BigInteger])
+        $valid = $exists -and $(switch ($kind) {
+            'object' { $value -is [Collections.IDictionary] -or $value -is [pscustomobject] }
+            'version' { $integer -and $value -eq 1 }
+            'string' { $value -is [string] -and -not [string]::IsNullOrWhiteSpace($value) }
+            'bool' { $value -is [bool] }
+            'int32' { $integer -and $value -gt 0 -and $value -le [int]::MaxValue }
+            'int64' { $integer -and $value -gt 0 -and $value -le [long]::MaxValue }
+            'strings' { $value -is [array] -and @($value | Where-Object { $_ -isnot [string] -or [string]::IsNullOrWhiteSpace($_) }).Count -eq 0 }
+        })
+        if (-not $valid) {
+            $invalid.Add($key)
+            $detail=if (-not $exists) { 'required field is missing' } else { "expected $kind" }
+            $reasons.Add("Configuration '$Path', field '$key': $detail")
+        }
+    }
+    if ($reasons.Count) { return @{ Ok=$false; Code='config_invalid'; Reasons=@($reasons) } }
+    return @{ Ok=$true; Code='ok'; Reasons=@() }
+}
+
 function Get-CollabConfig {
     [CmdletBinding()]
     param([Parameter(Mandatory)][string]$Root)
@@ -118,11 +168,13 @@ function Get-CollabConfig {
         return @{ Ok = $false; Code = 'config_missing'; Reasons = @("Missing configuration: $path") }
     }
     try {
-        $config = Get-Content -LiteralPath $path -Raw -Encoding utf8 | ConvertFrom-Json -Depth 32
+        $config = Get-Content -LiteralPath $path -Raw -Encoding utf8 | ConvertFrom-Json -Depth 32 -NoEnumerate
     }
     catch {
-        return @{ Ok = $false; Code = 'config_invalid'; Reasons = @("Configuration is not valid JSON: $($_.Exception.Message)") }
+        return @{ Ok = $false; Code = 'config_invalid'; Reasons = @("Cannot read configuration '$path' as JSON: $($_.Exception.Message)") }
     }
+    $validation = Test-CollabConfig -Config $config -Path $path
+    if (-not $validation.Ok) { return $validation }
     return @{ Ok = $true; Code = 'ok'; Config = $config; Path = $path }
 }
 

@@ -85,6 +85,8 @@ Windows has undergone isolated regression testing. macOS has a platform implemen
 
 ## Install and get started
 
+Use GitHub **Code → Download ZIP** or `git clone` to obtain the entire repository, then preserve the directory structure when extracting it. Project configuration and command templates are in `assets/project/.agents/`, which contains 12 files. The initializer checks all 29 project asset files before preparing the setup plan.
+
 Copy the complete directory into your coding assistant's skills directory and name it `multi-model-collaboration`. For example, Codex's default is `~/.codex/skills/`. Keep the internal structure intact.
 
 In the target project's conversation, enter:
@@ -144,6 +146,14 @@ The initializer copies runtime content from `assets/project/`. A configured proj
 
 ## Local verification
 
+Run the distribution checks:
+
+```powershell
+pwsh -NoProfile -File tests/Test-Distribution.ps1
+```
+
+These checks cover setup and rollback from a complete package, missing files, missing fields and incorrect field types. `package_incomplete` lists missing assets; configuration errors identify the file and field. See [onboarding diagnostics](references/onboarding.md#接入诊断) for corrective steps. After setup, configure the project's model CLI using the [tool integration contract](references/tools.md).
+
 Run from the skill root:
 
 ```powershell
@@ -164,3 +174,7 @@ The detailed references and project command documentation are currently in Simpl
 - [Tool integration contract](references/tools.md)
 - [Recovery, scanning and role boundaries](references/recovery.md)
 - [Validation](references/validation.md)
+
+## License
+
+This project uses the [MIT License](LICENSE).

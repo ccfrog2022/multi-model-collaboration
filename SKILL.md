@@ -29,6 +29,10 @@ pwsh -NoProfile -File scripts/collaboration/Collab.ps1 Doctor
 
 公共命令使用 PowerShell 7.4+；Windows 项目与备份目录使用本地 NTFS，macOS 另需 Python 3.11+。两个平台沿用同一套流程，由脚本选择平台实现。Windows 已进行隔离回归；macOS 实机验证与多进程 CLI 清理验收仍待完成，环境判断依据 [验证记录](references/validation.md)。
 
+使用完整仓库或完整 ZIP，保留 `assets/project/.agents/` 的配置和模板。初始化器先检查 29 个项目资产文件；出现 `package_incomplete` 时，按 `MissingPaths` 补齐同一版本的文件后重新运行 `Plan`。配置校验会列出文件路径与缺失或类型错误的字段，按 [接入诊断](references/onboarding.md#接入诊断) 修正配置后再继续。
+
+发布包与配置诊断使用 `pwsh -NoProfile -File tests/Test-Distribution.ps1` 验证；完整协作回归和平台进度见 [验证记录](references/validation.md)。项目采用 [MIT License](LICENSE)。
+
 ## 分配角色与文件职责
 
 这里的“实例”指一次具有明确任务、角色和身份的模型工作会话。独立实例可以使用相同模型，也可以根据项目配置使用不同模型。

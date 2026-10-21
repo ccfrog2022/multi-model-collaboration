@@ -29,6 +29,10 @@ Run project commands from the project root and obtain exact arguments from the p
 
 Public commands require PowerShell 7.4+. Windows project and backup directories use local NTFS; macOS also requires Python 3.11+. Both platforms follow the same workflow, with scripts selecting the platform implementation. Windows has undergone isolated regression testing. macOS real-machine validation and cleanup acceptance for multi-process CLIs remain pending; use [Validation](references/validation.md) when assessing the environment.
 
+Use the complete repository or ZIP and preserve the configuration and templates under `assets/project/.agents/`. The initializer checks 29 project asset files first. For `package_incomplete`, restore the same-version files listed in `MissingPaths`, then rerun `Plan`. Configuration validation identifies the file and missing or incorrectly typed fields; follow the [onboarding diagnostics](references/onboarding.md#接入诊断) before continuing.
+
+Run `pwsh -NoProfile -File tests/Test-Distribution.ps1` to verify the distribution and configuration diagnostics. See [validation](references/validation.md) for full collaboration regression and platform progress. The project uses the [MIT License](LICENSE).
+
 ## Assign roles and file ownership
 
 An instance is a model work session with an explicit task, role and identity. Independent instances can use the same model or different models selected through project configuration.

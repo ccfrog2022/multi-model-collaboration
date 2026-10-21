@@ -81,3 +81,16 @@ pwsh -NoProfile -File $initializer -Root $projectRoot -Mode Rollback `
 ## 输出
 
 命令输出 JSON，`Ok` 表示结果，`Code` 表示具体状态；成功退出码为 0。常用状态为 `planned`、`applied`、`no_op`、`rolled_back`。应用与回滚结果包含日志路径及写入数量。
+
+## 接入诊断
+
+| 结果 | 如何处理 |
+|---|---|
+| `package_incomplete` | 查看 `MissingPaths`，从同一版本的完整仓库或 ZIP 补齐 `assets/project/` 下列出的文件，再重新生成方案。保留 `.agents` 目录。 |
+| 配置缺字段或类型错误 | 错误信息包含配置文件路径和字段，例如 `protected.maintenancePaths`；以同版本 `collaboration.json` 为结构参考，保留项目已有值，补齐或修正该字段。 |
+| 配置 JSON 无法读取 | 按错误信息中的文件路径检查文件访问权限和 JSON 语法。 |
+| Windows 文件读取失败 | 信息包含具体路径、Win32 错误码和系统原因，按实际路径或权限问题处理。 |
+
+配置结构包括 `schemaVersion=1`、`paths`、`protocol` 和 `protected`。`protocol.serial` 为布尔值，库存上限为正整数；路径列表为字符串数组，可使用空数组。初始化方案与项目运行命令共用字段校验规则，错误配置在任务状态写入之前报告。
+
+发布检查命令为 `pwsh -NoProfile -File tests/Test-Distribution.ps1`。该检查在新建的隔离目录中验证缺文件与配置异常，并完成正常接入、Doctor 和回滚。
