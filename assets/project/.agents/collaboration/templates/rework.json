@@ -1,0 +1,7 @@
+{
+  "TaskId": "example-ordinary",
+  "ExpectedRevision": 1,
+  "ExpectedDigest": "COPY_FROM_STATUS",
+  "Reason": "Fix the reproduced boundary case within the current task scope",
+  "ReuseImplementationFrom": ""
+}

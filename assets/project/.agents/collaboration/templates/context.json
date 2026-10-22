@@ -1,0 +1,12 @@
+{
+  "TaskId": "example-ordinary",
+  "Role": "tester",
+  "ExpectedRevision": 2,
+  "ExpectedDigest": "COPY_FROM_STATUS",
+  "PromptFile": "collaboration-artifacts/example-ordinary/tester.md",
+  "References": [
+    "src/example.js"
+  ],
+  "PriorInvocationIds": [],
+  "Delta": "Verify the current correction and relevant regressions."
+}

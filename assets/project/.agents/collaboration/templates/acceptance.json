@@ -1,0 +1,8 @@
+{
+  "TaskId": "example-ordinary",
+  "AcceptanceId": "A1",
+  "Status": "pending",
+  "EvidencePath": "collaboration-artifacts/example-ordinary/test-output.txt",
+  "Kind": "acceptance",
+  "Note": "填写核实的证据、实际结果及对应验收状态"
+}

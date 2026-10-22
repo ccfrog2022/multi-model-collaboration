@@ -1,0 +1,14 @@
+{
+  "TaskId": "example-ordinary",
+  "ExpectedRevision": 1,
+  "ExpectedDigest": "COPY_FROM_STATUS",
+  "InvocationIds": [
+    "COPY_FAILED_INVOCATION_ID"
+  ],
+  "ViolationIds": [],
+  "EvidencePath": "collaboration-artifacts/example-ordinary/recovery.md",
+  "EvidenceSha256": "COPY_REPORT_SHA256",
+  "Reason": "Describe the failure and correction",
+  "ProcessVerification": "Record process ownership, cleanup checks and observed exits",
+  "FileVerification": "Record restored out-of-scope files, original backup and frozen-test verification"
+}

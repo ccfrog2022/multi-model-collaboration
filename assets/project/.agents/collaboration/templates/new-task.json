@@ -1,0 +1,22 @@
+{
+  "TaskId": "example-ordinary",
+  "Grade": "ordinary",
+  "GradeReason": "局部可回滚文件变更，验收明确",
+  "Authorization": "填写用户确认的任务范围与实施要求",
+  "Acceptance": [
+    {
+      "id": "A1",
+      "requirement": "指定功能在独立测试中通过"
+    }
+  ],
+  "AllowedPath": [
+    "src/example.js",
+    "tests/example.test.js"
+  ],
+  "FrozenTest": [],
+  "RequiresRealWorkflow": false,
+  "Notes": "填写当前任务的背景与执行要点",
+  "TesterWritePath": [
+    "tests/example.test.js"
+  ]
+}

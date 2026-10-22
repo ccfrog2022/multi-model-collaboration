@@ -1,0 +1,18 @@
+{
+  "TaskId": "example-important",
+  "SubjectKind": "plan",
+  "Verdict": "PASS WITH NITS",
+  "InvocationId": "COPY_FROM_INVOKE",
+  "ArtifactPath": ".collaboration/tasks/example-important/logs/COPY_FROM_INVOKE/result.txt",
+  "ExpectedSubjectSha256": "COPY_FROM_STATUS",
+  "Adjudication": "N1：填写协调者核实后的处理结论与非阻断依据",
+  "Findings": [
+    {
+      "id": "N1",
+      "severity": "low",
+      "blocking": false,
+      "text": "填写实际问题",
+      "location": "文件:行"
+    }
+  ]
+}

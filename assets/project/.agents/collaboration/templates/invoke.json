@@ -1,0 +1,14 @@
+{
+  "TaskId": "example-ordinary",
+  "Tool": "my-worker",
+  "Role": "executor",
+  "InstanceId": "executor-01",
+  "PromptFile": "collaboration-artifacts/example-ordinary/executor.md",
+  "WritePaths": [
+    "src/example.js"
+  ],
+  "ExpectedDigest": "COPY_FROM_STATUS",
+  "TotalTimeoutSeconds": 900,
+  "IdleTimeoutSeconds": 240,
+  "ExpectedRevision": 1
+}
